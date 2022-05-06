@@ -111,13 +111,13 @@ class CandidateController(implicit val executionContext: ExecutionContextExecuto
   }
 
   def deleteCandidate(candidateId: String, auth: String): Route = {
-    onComplete(candidateService.updateCandidate(candidateId, candidateRequester)) {
+    onComplete(candidateService.deleteCandidate(candidateId)) {
       case Success(value) => {
-        val code = if (value.results != null) {
+        val code = if (value.status == "ok") {
           StatusCodes.OK
         }
         else {
-          if (value.errors.nonEmpty) {
+          if (value.status == "error") {
             StatusCodes.BadRequest
           } else {
             StatusCodes.InternalServerError

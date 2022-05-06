@@ -12,7 +12,7 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
                           implicit val logWrapper: ILogWrapper,
                           implicit val executionContext: ExecutionContextExecutor) extends ICandidateRepository {
 
-  lazy val TABLE_NAME: String = configurationWrapper.getDBConfig("recordTable")
+  lazy val TABLE_NAME: String = configurationWrapper.getDBConfig("candidateTable")
 
   override def getCandidates: (List[Candidate], String) = {
     try {
@@ -48,13 +48,11 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       preparedStatement.setString(1, candidateId)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
-      if(returnSet._2.isEmpty) {
-        if(returnSet._1.next()) {
+      if(returnSet._2.isEmpty && returnSet._1.next()) {
           candidate = Candidate(returnSet._1.getString("id"), returnSet._1.getString("name"),
             returnSet._1.getString("dob"), returnSet._1.getString("bio_link"),
             returnSet._1.getString("image_link"), returnSet._1.getString("policy"),
             returnSet._1.getInt("voted_counted"))
-        }
         (candidate, returnSet._2)
       }
       else {
@@ -71,48 +69,72 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
 
   override def insertCandidate(name: String, dob: String, bioLink: String, imageLink: String,
                                policy: String): (Candidate, String) = {
-    val query: String = s"INSERT INTO $TABLE_NAME (name, dob, bio_link, image_link, policy) VALUES(?, ?, ?, ?, ?) RETURNING id, voted_count"
-    val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
-    preparedStatement.setString(1, name)
-    preparedStatement.setString(2, dob)
-    preparedStatement.setString(3, bioLink)
-    preparedStatement.setString(4, imageLink)
-    preparedStatement.setString(5, policy)
-    val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
-    if(returnSet._2 == "" && returnSet._1.next()) {
-      (Candidate(returnSet._1.getString("id"), name, dob, bioLink, imageLink, policy,
-        returnSet._1.getInt("voted_count")), returnSet._2)
+    try {
+      val query: String = s"INSERT INTO $TABLE_NAME (name, dob, bio_link, image_link, policy) VALUES(?, ?, ?, ?, ?) RETURNING id, voted_count"
+      val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
+      preparedStatement.setString(1, name)
+      preparedStatement.setString(2, dob)
+      preparedStatement.setString(3, bioLink)
+      preparedStatement.setString(4, imageLink)
+      preparedStatement.setString(5, policy)
+      val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
+      if(returnSet._2 == "" && returnSet._1.next()) {
+        (Candidate(returnSet._1.getString("id"), name, dob, bioLink, imageLink, policy,
+          returnSet._1.getInt("voted_count")), returnSet._2)
+      }
+      else (null, returnSet._2)
     }
-    else (null, returnSet._2)
+    catch {
+      case exception: Exception => {
+        logWrapper.error(s"[Candidate Repository] Ex: ${exception.toString}")
+        (null, exception.toString)
+      }
+    }
   }
 
   override def updateCandidate(candidateId: String, name: String, dob: String, bioLink: String, imageLink: String,
                                policy: String): (Candidate, String) = {
-    val query: String = s"UPDATE $TABLE_NAME SET name = ?, dob = ?, bio_link = ?, image_link = ?, policy = ? " +
-      s"WHERE id = ? RETURNING id, voted_count"
-    val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
-    preparedStatement.setString(1, name)
-    preparedStatement.setString(2, dob)
-    preparedStatement.setString(3, bioLink)
-    preparedStatement.setString(4, imageLink)
-    preparedStatement.setString(5, policy)
-    preparedStatement.setString(6, candidateId)
-    val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
-    if(returnSet._2 == "" && returnSet._1.next()) {
-      (Candidate(returnSet._1.getString("id"), name, dob, bioLink, imageLink, policy,
-        returnSet._1.getInt("voted_count")), returnSet._2)
+    try {
+      val query: String = s"UPDATE $TABLE_NAME SET name = ?, dob = ?, bio_link = ?, image_link = ?, policy = ? " +
+        s"WHERE id = ? RETURNING id, voted_count"
+      val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
+      preparedStatement.setString(1, name)
+      preparedStatement.setString(2, dob)
+      preparedStatement.setString(3, bioLink)
+      preparedStatement.setString(4, imageLink)
+      preparedStatement.setString(5, policy)
+      preparedStatement.setString(6, candidateId)
+      val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
+      if(returnSet._2 == "" && returnSet._1.next()) {
+        (Candidate(returnSet._1.getString("id"), name, dob, bioLink, imageLink, policy,
+          returnSet._1.getInt("voted_count")), returnSet._2)
+      }
+      else (null, returnSet._2)
     }
-    else (null, returnSet._2)
+    catch {
+      case exception: Exception => {
+        logWrapper.error(s"[Candidate Repository] Ex: ${exception.toString}")
+        (null, exception.toString)
+      }
+    }
   }
 
   override def deleteCandidate(candidateId: String): (String, String) = {
-    val query: String = s"DELETE FROM $TABLE_NAME WHERE id = ? RETURNING id"
-    val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
-    preparedStatement.setString(1, candidateId)
-    val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
-    if(returnSet._2 == "" && returnSet._1.next()) {
-      ("ok", null)
+    try {
+      val query: String = s"DELETE FROM $TABLE_NAME WHERE id = ? RETURNING id"
+      val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
+      preparedStatement.setString(1, candidateId)
+      val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
+      if(returnSet._2 == "" && returnSet._1.next()) {
+        ("ok", null)
+      }
+      else ("error", returnSet._2)
     }
-    else ("error", returnSet._2)
+    catch {
+      case exception: Exception => {
+        logWrapper.error(s"[Candidate Repository] Ex: ${exception.toString}")
+        ("error", exception.toString)
+      }
+    }
   }
 }

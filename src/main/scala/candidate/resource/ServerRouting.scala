@@ -3,10 +3,10 @@ package candidate.resource
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpHeader, StatusCodes}
 import akka.http.scaladsl.server.{Directives, Route}
-import candidate.resource.controllers.{CandidateController, HealthCheckController}
-import candidate.resource.models.requesters.CandidateRequester
-import candidate.resource.services.{CandidateService, HealthCheckService}
-import candidate.resource.services.interfaces.{ICandidateService, IHealthCheckService}
+import candidate.resource.controllers.{CandidateController, HealthCheckController, VoterController}
+import candidate.resource.models.requesters.{CandidateRequester, VoteStatusRequester}
+import candidate.resource.services.{CandidateService, HealthCheckService, VoterService}
+import candidate.resource.services.interfaces.{ICandidateService, IHealthCheckService, IVoterService}
 import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, ILogWrapper, IPostgresWrapper, JsonSupport}
 
 import scala.compat.java8.OptionConverters._
@@ -25,6 +25,8 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
   implicit val candidateService: ICandidateService = new CandidateService()
   implicit val candidateController: CandidateController = new CandidateController()
 
+  implicit val voterService: IVoterService = new VoterService()
+  implicit val voterController: VoterController = new VoterController()
 
   def route: Route = {
     val baseRoute = pathPrefix("api")
@@ -101,6 +103,20 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
                   }
                   case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
                 }
+              }
+            }
+          }
+        }),
+        post(pathPrefix("vote" / "status") {
+          extractRequest {
+            requester => {
+              requester.getHeader("Authorization").asScala match {
+                case Some(HttpHeader(_, authorization)) => entity(as[String]) { voterJson => {
+                  val voter: VoteStatusRequester = parse(voterJson).extract[VoteStatusRequester]
+                  voterController.checkVoteStatus(voter.nationalId, authorization)
+                }
+                }
+                case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
               }
             }
           }

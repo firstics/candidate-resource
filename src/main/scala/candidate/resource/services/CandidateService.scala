@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 
 class CandidateService(implicit val executionContext: ExecutionContextExecutor,
                        implicit val configurationWrapper: IConfigurationWrapper,
-                       implicit val rocksDBWrapper: IPostgresWrapper,
+                       implicit val postgresWrapper: IPostgresWrapper,
                        implicit val logger: ILogWrapper) extends ICandidateService {
   override def getCandidates: Future[CandidatesResponder] = Future {
     val result: (List[Candidate], String) = candidateRepository.getCandidates

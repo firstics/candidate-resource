@@ -6,8 +6,8 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.{Directives, Route}
 import candidate.resource.actors.ServerActor
 import candidate.resource.models.ServerRequest
-import candidate.resource.wrappers.{ConfigurationWrapper, PostgresWrapper}
-import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, IPostgresWrapper}
+import candidate.resource.wrappers.{ConfigurationWrapper, LogWrapper, PostgresWrapper}
+import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, ILogWrapper, IPostgresWrapper}
 
 import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration.Duration
@@ -26,6 +26,7 @@ object Server extends Directives {
 
     implicit val executionContextExecutor: ExecutionContextExecutor = system.dispatcher
     implicit val dBWrapper: IPostgresWrapper = new PostgresWrapper()
+    implicit val logWrapper: ILogWrapper = new LogWrapper()
 
     try {
       val serverRoute = new ServerRouting()
