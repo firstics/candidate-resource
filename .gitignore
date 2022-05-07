@@ -17,3 +17,4 @@ dist/
 .vsocde/*
 .metals*
 .vscode/settings.json
+*.csv

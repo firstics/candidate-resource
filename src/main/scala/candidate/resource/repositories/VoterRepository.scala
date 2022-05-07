@@ -20,7 +20,7 @@ class VoterRepository(implicit val configurationWrapper: IConfigurationWrapper,
       preparedStatement.setString(1, nationalId)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
       if(returnSet._2.isEmpty && returnSet._1.next()) {
-        (true, returnSet._2)
+        (!returnSet._1.getBoolean("is_voted"), returnSet._2)
       }
       else {
         (false, returnSet._2)
@@ -48,15 +48,15 @@ class VoterRepository(implicit val configurationWrapper: IConfigurationWrapper,
           val candidateQuery: String = s"UPDATE $CANDIDATE_TABLE SET voted_count = voted_count + 1 WHERE id = ? " +
             s"RETURNING id"
           val candidatePreparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(candidateQuery)
-          candidatePreparedStatement.setString(1, candidateId)
+          candidatePreparedStatement.setInt(1, candidateId.toInt)
           val candidateReturnSet: (ResultSet, String) = postgresWrapper.executeQuery(candidatePreparedStatement)
           if(candidateReturnSet._2.isEmpty && candidateReturnSet._1.next()) {
-            val candidateQuery: String = s"UPDATE $VOTER_TABLE SET is_voted = ? WHERE id = ? " +
-              s"RETURNING id, voted_count"
-            val voterPreparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(candidateQuery)
+            val voterQuery: String = s"UPDATE $VOTER_TABLE SET is_voted = ? WHERE id = ? " +
+              s"RETURNING id"
+            val voterPreparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(voterQuery)
             voterPreparedStatement.setBoolean(1, true)
             voterPreparedStatement.setString(2, nationalId)
-            val voterReturnSet: (ResultSet, String) = postgresWrapper.executeQuery(candidatePreparedStatement)
+            val voterReturnSet: (ResultSet, String) = postgresWrapper.executeQuery(voterPreparedStatement)
             if(voterReturnSet._2.isEmpty && voterReturnSet._1.next()) {
               ("ok", null)
             }

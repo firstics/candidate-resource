@@ -32,7 +32,8 @@ lazy val root = (project in file("."))
       "org.scalatest"                 %%    "scalatest"                       %   "3.1.0"                 % Test,
       "org.mockito"                   %     "mockito-core"                    %   "3.5.11"                % Test,
       "org.mockito"                   %%    "mockito-scala"                   %   "1.16.1"                      ,
-      "com.mockrunner"                %     "mockrunner-jdbc"                 %   "2.0.6"                 % Test
+      "com.mockrunner"                %     "mockrunner-jdbc"                 %   "2.0.6"                 % Test,
+      "com.github.tototoshi"          %%    "scala-csv"                       %   "1.3.10"
 
     )
   )

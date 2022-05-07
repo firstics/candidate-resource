@@ -17,7 +17,7 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
   override def getCandidates: (List[Candidate], String) = {
     try {
       var cList: List[Candidate] = List.empty
-      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_counted from $CANDIDATE_TABLE"
+      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_count from $CANDIDATE_TABLE"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
       if(returnSet._2.isEmpty) {
@@ -25,7 +25,7 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
           cList = cList :+ Candidate(returnSet._1.getString("id"), returnSet._1.getString("name"),
             returnSet._1.getString("dob"), returnSet._1.getString("bio_link"),
             returnSet._1.getString("image_link"), returnSet._1.getString("policy"),
-            returnSet._1.getInt("voted_counted"))
+            returnSet._1.getInt("voted_count"))
         }
         (cList, returnSet._2)
       }
@@ -44,15 +44,15 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
   override def getCandidate(candidateId: String): (Candidate, String) = {
     try {
       var candidate: Candidate = null
-      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_counted FROM $CANDIDATE_TABLE WHERE id = ?"
+      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_count FROM $CANDIDATE_TABLE WHERE id = ?"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
-      preparedStatement.setString(1, candidateId)
+      preparedStatement.setInt(1, candidateId.toInt)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
       if(returnSet._2.isEmpty && returnSet._1.next()) {
           candidate = Candidate(returnSet._1.getString("id"), returnSet._1.getString("name"),
             returnSet._1.getString("dob"), returnSet._1.getString("bio_link"),
             returnSet._1.getString("image_link"), returnSet._1.getString("policy"),
-            returnSet._1.getInt("voted_counted"))
+            returnSet._1.getInt("voted_count"))
         (candidate, returnSet._2)
       }
       else {
@@ -103,7 +103,7 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
       preparedStatement.setString(3, bioLink)
       preparedStatement.setString(4, imageLink)
       preparedStatement.setString(5, policy)
-      preparedStatement.setString(6, candidateId)
+      preparedStatement.setInt(6, candidateId.toInt)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
       if(returnSet._2 == "" && returnSet._1.next()) {
         (Candidate(returnSet._1.getString("id"), name, dob, bioLink, imageLink, policy,
@@ -123,12 +123,12 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
     try {
       val query: String = s"DELETE FROM $CANDIDATE_TABLE WHERE id = ? RETURNING id"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
-      preparedStatement.setString(1, candidateId)
+      preparedStatement.setInt(1, candidateId.toInt)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
       if(returnSet._2 == "" && returnSet._1.next()) {
         ("ok", null)
       }
-      else ("error", returnSet._2)
+      else ("error", "Candidate not found")
     }
     catch {
       case exception: Exception => {

@@ -3,7 +3,9 @@ package candidate.resource.repositories
 import candidate.resource.models.{CandidatesVoted, ElectionResult}
 import candidate.resource.repositories.interfaces.IElectionRepository
 import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, ILogWrapper, IPostgresWrapper}
+import com.github.tototoshi.csv.CSVWriter
 
+import java.io.File
 import java.sql.{PreparedStatement, ResultSet}
 import scala.concurrent.ExecutionContextExecutor
 
@@ -17,13 +19,13 @@ class ElectionRepository(implicit val configurationWrapper: IConfigurationWrappe
   override def getCandidatesVoted: (List[CandidatesVoted], String) = {
     try {
       var cList: List[CandidatesVoted] = List.empty
-      val query: String = s"SELECT id, voted_counted from $CANDIDATE_TABLE"
+      val query: String = s"SELECT id, voted_count from $CANDIDATE_TABLE"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
       if(returnSet._2.isEmpty) {
         while(returnSet._1.next()) {
           cList = cList :+ CandidatesVoted(returnSet._1.getString("id"),
-            returnSet._1.getInt("voted_counted"))
+            returnSet._1.getInt("voted_count"))
         }
         (cList, returnSet._2)
       }
@@ -55,7 +57,7 @@ class ElectionRepository(implicit val configurationWrapper: IConfigurationWrappe
             eList = eList :+ ElectionResult(returnSet._1.getString("id"), returnSet._1.getString("name"),
               returnSet._1.getString("dob"), returnSet._1.getString("bio_link"),
               returnSet._1.getString("image_link"), returnSet._1.getString("policy"),
-              returnSet._1.getInt("voted_counted"), (returnSet._1.getInt("voted_counted")/totalVoted * 100).toString + "%")
+              returnSet._1.getInt("voted_count"), ((returnSet._1.getInt("voted_count").toFloat/totalVoted) * 100).toString + "%")
           }
           (eList, returnSet._2)
         }
@@ -71,6 +73,36 @@ class ElectionRepository(implicit val configurationWrapper: IConfigurationWrappe
       case exception: Exception => {
         logWrapper.error(s"[Election Repository] Ex: ${exception.toString}")
         (List.empty, exception.toString)
+      }
+    }
+  }
+
+  override def exportVoteResult: File = {
+    try {
+      var idList: List[String] = List("candidateId")
+      var voteList: List[String] = List("votedCount")
+      val query: String = s"SELECT id, voted_count from $CANDIDATE_TABLE"
+      val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
+      val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
+      if(returnSet._2.isEmpty) {
+        while(returnSet._1.next()) {
+          idList = idList :+ returnSet._1.getString("id")
+          voteList = voteList :+ returnSet._1.getString("voted_count")
+        }
+        val f = new File("candidates.csv")
+        val writer = CSVWriter.open(f)
+        writer.writeAll(List(idList, voteList))
+        writer.close()
+        f
+      }
+      else {
+        null
+      }
+    }
+    catch {
+      case exception: Exception => {
+        logWrapper.error(s"[Election Repository] Ex: ${exception.toString}")
+        null
       }
     }
   }

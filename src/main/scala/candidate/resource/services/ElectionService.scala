@@ -8,6 +8,7 @@ import candidate.resource.repositories.interfaces.IElectionRepository
 import candidate.resource.services.interfaces.IElectionService
 import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, ILogWrapper, IPostgresWrapper}
 
+import java.io.File
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 class ElectionService(implicit val executionContext: ExecutionContextExecutor,
@@ -31,6 +32,12 @@ class ElectionService(implicit val executionContext: ExecutionContextExecutor,
     ElectionResultResponder(result._1, List(Error(Some(result._2))))
   }
 
+  override def exportCsv: Future[File] = Future {
+    val result: File = electionRepository.exportVoteResult
+    result
+  }
+
   override def electionRepository: IElectionRepository = new ElectionRepository
+
 
 }

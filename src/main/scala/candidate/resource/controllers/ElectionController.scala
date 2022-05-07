@@ -84,4 +84,28 @@ class ElectionController(implicit val executionContext: ExecutionContextExecutor
       }
     }
   }
+
+  def exportCsv(auth: String): Route = {
+    onComplete(electionService.exportCsv) {
+      case Success(value) => {
+        val code = if (value != null) {
+          StatusCodes.OK
+        }
+        else {
+          if (value == null) {
+            StatusCodes.BadRequest
+          } else {
+            StatusCodes.InternalServerError
+          }
+        }
+        complete {
+          HttpResponse(entity = HttpEntity(ContentTypes.`text/csv(UTF-8)`, write(value)), status = code)
+        }
+      }
+      case Failure(ex) => {
+        ex.printStackTrace()
+        throw ex
+      }
+    }
+  }
 }
