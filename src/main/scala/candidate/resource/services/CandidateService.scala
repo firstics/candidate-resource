@@ -2,7 +2,7 @@ package candidate.resource.services
 
 import candidate.resource.models.{Candidate, Error}
 import candidate.resource.models.requesters.CandidateRequester
-import candidate.resource.models.responders.{CandidateResponder, CandidatesResponder, DeleteCandidateResponder}
+import candidate.resource.models.responders.{CandidateResponder, CandidatesResponder, StatusResponder}
 import candidate.resource.repositories.CandidateRepository
 import candidate.resource.repositories.interfaces.ICandidateRepository
 import candidate.resource.services.interfaces.ICandidateService
@@ -48,9 +48,9 @@ class CandidateService(implicit val executionContext: ExecutionContextExecutor,
     }
   }
 
-  override def deleteCandidate(candidateId: String): Future[DeleteCandidateResponder] = Future {
+  override def deleteCandidate(candidateId: String): Future[StatusResponder] = Future {
     val result: (String, String) = candidateRepository.deleteCandidate(candidateId)
-    DeleteCandidateResponder(result._1, Some(result._2))
+    StatusResponder(result._1, Some(result._2))
   }
 
 

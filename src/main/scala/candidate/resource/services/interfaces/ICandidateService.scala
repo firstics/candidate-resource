@@ -12,7 +12,7 @@ trait ICandidateService {
   def getCandidate(candidateId: String): Future[CandidateResponder]
   def createCandidate(candidateRequester: CandidateRequester): Future[CandidateResponder]
   def updateCandidate(candidateId: String, candidateRequester: CandidateRequester): Future[CandidateResponder]
-  def deleteCandidate(candidateId: String): Future[DeleteCandidateResponder]
+  def deleteCandidate(candidateId: String): Future[StatusResponder]
   def validateCandidate(candidateRequester: CandidateRequester): List[Error]
   def candidateRepository: ICandidateRepository
 }

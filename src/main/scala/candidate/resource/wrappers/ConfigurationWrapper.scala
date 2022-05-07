@@ -8,6 +8,8 @@ import scala.collection.JavaConverters._
 class ConfigurationWrapper extends IConfigurationWrapper {
   private final val config: Config = ConfigFactory.load()
 
+  private final var electionIsOpen: Boolean = true
+
   private lazy val settingConfig: Map[String, String] = {
     val conf = config.getConfig("app.settings")
     conf.root.keySet().asScala.map(key => key -> conf.getString(key)).toMap
@@ -28,5 +30,14 @@ class ConfigurationWrapper extends IConfigurationWrapper {
 
   override def getDBConfig(key: String): String = {
     dBConfig.getOrElse(key, "")
+  }
+
+  override def setElectionStatus(value: Boolean): Boolean = {
+    electionIsOpen = value
+    electionIsOpen
+  }
+
+  override def getElectionStatus: Boolean = {
+    electionIsOpen
   }
 }

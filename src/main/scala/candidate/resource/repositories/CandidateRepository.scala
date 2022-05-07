@@ -12,12 +12,12 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
                           implicit val logWrapper: ILogWrapper,
                           implicit val executionContext: ExecutionContextExecutor) extends ICandidateRepository {
 
-  lazy val TABLE_NAME: String = configurationWrapper.getDBConfig("candidateTable")
+  lazy val CANDIDATE_TABLE: String = configurationWrapper.getDBConfig("candidateTable")
 
   override def getCandidates: (List[Candidate], String) = {
     try {
       var cList: List[Candidate] = List.empty
-      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_counted from $TABLE_NAME"
+      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_counted from $CANDIDATE_TABLE"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
       if(returnSet._2.isEmpty) {
@@ -44,7 +44,7 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
   override def getCandidate(candidateId: String): (Candidate, String) = {
     try {
       var candidate: Candidate = null
-      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_counted FROM $TABLE_NAME WHERE id = ?"
+      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_counted FROM $CANDIDATE_TABLE WHERE id = ?"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       preparedStatement.setString(1, candidateId)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
@@ -70,7 +70,7 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
   override def insertCandidate(name: String, dob: String, bioLink: String, imageLink: String,
                                policy: String): (Candidate, String) = {
     try {
-      val query: String = s"INSERT INTO $TABLE_NAME (name, dob, bio_link, image_link, policy) VALUES(?, ?, ?, ?, ?) RETURNING id, voted_count"
+      val query: String = s"INSERT INTO $CANDIDATE_TABLE (name, dob, bio_link, image_link, policy) VALUES(?, ?, ?, ?, ?) RETURNING id, voted_count"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       preparedStatement.setString(1, name)
       preparedStatement.setString(2, dob)
@@ -95,7 +95,7 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
   override def updateCandidate(candidateId: String, name: String, dob: String, bioLink: String, imageLink: String,
                                policy: String): (Candidate, String) = {
     try {
-      val query: String = s"UPDATE $TABLE_NAME SET name = ?, dob = ?, bio_link = ?, image_link = ?, policy = ? " +
+      val query: String = s"UPDATE $CANDIDATE_TABLE SET name = ?, dob = ?, bio_link = ?, image_link = ?, policy = ? " +
         s"WHERE id = ? RETURNING id, voted_count"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       preparedStatement.setString(1, name)
@@ -121,7 +121,7 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
 
   override def deleteCandidate(candidateId: String): (String, String) = {
     try {
-      val query: String = s"DELETE FROM $TABLE_NAME WHERE id = ? RETURNING id"
+      val query: String = s"DELETE FROM $CANDIDATE_TABLE WHERE id = ? RETURNING id"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       preparedStatement.setString(1, candidateId)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)

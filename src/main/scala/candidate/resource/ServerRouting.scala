@@ -3,10 +3,10 @@ package candidate.resource
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpHeader, StatusCodes}
 import akka.http.scaladsl.server.{Directives, Route}
-import candidate.resource.controllers.{CandidateController, HealthCheckController, VoterController}
-import candidate.resource.models.requesters.{CandidateRequester, VoteStatusRequester}
-import candidate.resource.services.{CandidateService, HealthCheckService, VoterService}
-import candidate.resource.services.interfaces.{ICandidateService, IHealthCheckService, IVoterService}
+import candidate.resource.controllers.{CandidateController, ElectionController, HealthCheckController, VoterController}
+import candidate.resource.models.requesters.{CandidateRequester, CheckVoterStatusRequester, ToggleElectionRequester, VoteRequester}
+import candidate.resource.services.{CandidateService, ElectionService, HealthCheckService, VoterService}
+import candidate.resource.services.interfaces.{ICandidateService, IElectionService, IHealthCheckService, IVoterService}
 import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, ILogWrapper, IPostgresWrapper, JsonSupport}
 
 import scala.compat.java8.OptionConverters._
@@ -27,6 +27,9 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
 
   implicit val voterService: IVoterService = new VoterService()
   implicit val voterController: VoterController = new VoterController()
+
+  implicit val electionService: IElectionService = new ElectionService()
+  implicit val electionController: ElectionController = new ElectionController()
 
   def route: Route = {
     val baseRoute = pathPrefix("api")
@@ -112,8 +115,8 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
             requester => {
               requester.getHeader("Authorization").asScala match {
                 case Some(HttpHeader(_, authorization)) => entity(as[String]) { voterJson => {
-                  val voter: VoteStatusRequester = parse(voterJson).extract[VoteStatusRequester]
-                  voterController.checkVoteStatus(voter.nationalId, authorization)
+                  val voter: CheckVoterStatusRequester = parse(voterJson).extract[CheckVoterStatusRequester]
+                  voterController.checkVoteStatus(voter, authorization)
                 }
                 }
                 case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
@@ -121,6 +124,60 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
             }
           }
         }),
+        post(pathPrefix("vote") {
+          extractRequest {
+            requester => {
+              requester.getHeader("Authorization").asScala match {
+                case Some(HttpHeader(_, authorization)) => entity(as[String]) { voterJson => {
+                  val voter: VoteRequester = parse(voterJson).extract[VoteRequester]
+                  voterController.vote(voter, authorization)
+                }
+                }
+                case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
+              }
+            }
+          }
+        }),
+        post(pathPrefix("election" / "toggle") {
+          extractRequest {
+            requester => {
+              requester.getHeader("Authorization").asScala match {
+                case Some(HttpHeader(_, authorization)) => entity(as[String]) { electionJson => {
+                  val election: ToggleElectionRequester = parse(electionJson).extract[ToggleElectionRequester]
+                  electionController.toggleElection(election, authorization)
+                  }
+                }
+                case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
+              }
+            }
+          }
+        }),
+        get(pathPrefix("election" / "toggle") {
+          extractRequest {
+            requester => {
+              requester.getHeader("Authorization").asScala match {
+                case Some(HttpHeader(_, authorization)) => entity(as[String]) { electionJson => {
+                  val election: ToggleElectionRequester = parse(electionJson).extract[ToggleElectionRequester]
+                  electionController.toggleElection(election, authorization)
+                }
+                }
+                case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
+              }
+            }
+          }
+        }),
+        post(pathPrefix("election" / "result") {
+          extractRequest {
+            requester => {
+              requester.getHeader("Authorization").asScala match {
+                case Some(HttpHeader(_, authorization)) => {
+                  electionController.getElectionResult(authorization)
+                }
+                case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
+              }
+            }
+          }
+        })
       )
     }
   }
