@@ -1,6 +1,6 @@
 package candidate.resource
 
-import akka.actor.ActorSystem
+import akka.actor._
 import akka.http.scaladsl.model.{HttpHeader, StatusCodes}
 import akka.http.scaladsl.server.{Directives, Route}
 import candidate.resource.controllers.{CandidateController, ElectionController, HealthCheckController, VoterController}
@@ -189,7 +189,7 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
               }
             }
           }
-        }),
+        })
       )
     }
   }

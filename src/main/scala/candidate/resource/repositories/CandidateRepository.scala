@@ -17,7 +17,7 @@ class CandidateRepository(implicit val configurationWrapper: IConfigurationWrapp
   override def getCandidates: (List[Candidate], String) = {
     try {
       var cList: List[Candidate] = List.empty
-      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_count from $CANDIDATE_TABLE"
+      val query: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_count FROM $CANDIDATE_TABLE"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
       if(returnSet._2.isEmpty) {

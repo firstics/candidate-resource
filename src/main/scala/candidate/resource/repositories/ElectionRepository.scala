@@ -57,7 +57,7 @@ class ElectionRepository(implicit val configurationWrapper: IConfigurationWrappe
             eList = eList :+ ElectionResult(returnSet._1.getString("id"), returnSet._1.getString("name"),
               returnSet._1.getString("dob"), returnSet._1.getString("bio_link"),
               returnSet._1.getString("image_link"), returnSet._1.getString("policy"),
-              returnSet._1.getInt("voted_count"), ((returnSet._1.getInt("voted_count").toFloat/totalVoted) * 100).toString + "%")
+              returnSet._1.getInt("voted_count"), ((returnSet._1.getInt("voted_count").toFloat/totalVoted).toInt * 100).toString + "%")
           }
           (eList, returnSet._2)
         }
