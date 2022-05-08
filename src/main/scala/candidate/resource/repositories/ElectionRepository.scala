@@ -79,19 +79,20 @@ class ElectionRepository(implicit val configurationWrapper: IConfigurationWrappe
 
   override def exportVoteResult: File = {
     try {
-      var idList: List[String] = List("candidateId")
-      var voteList: List[String] = List("votedCount")
-      val query: String = s"SELECT id, voted_count from $CANDIDATE_TABLE"
+      var cList: List[(String, String)] = List.empty
+      val query: String = s"SELECT id, voted_count from $CANDIDATE_TABLE ORDER BY id"
       val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
       val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
       if(returnSet._2.isEmpty) {
         while(returnSet._1.next()) {
-          idList = idList :+ returnSet._1.getString("id")
-          voteList = voteList :+ returnSet._1.getString("voted_count")
+          cList = cList :+ (returnSet._1.getString("id"), returnSet._1.getString("voted_count"))
         }
         val f = new File("candidates.csv")
         val writer = CSVWriter.open(f)
-        writer.writeAll(List(idList, voteList))
+        writer.writeRow(List("candidateId", "votedCount"))
+        cList.foreach(c =>{
+          writer.writeRow(List(c._1,c._2))
+        })
         writer.close()
         f
       }

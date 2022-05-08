@@ -36,16 +36,22 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
     baseRoute {
       concat(
         get(path("healthcheck") {
-          withRequestTimeout(120.seconds) {
-            healthCheckController.healthCheck()
-          }
+          healthCheckController.healthCheck()
         }),
         get(path("candidates") {
           extractRequest {
             requester => {
               requester.getHeader("Authorization").asScala match {
                 case Some(HttpHeader(_, authorization)) => {
-                  candidateController.getCandidates(authorization)
+                  try {
+                    candidateController.getCandidates(authorization)
+                  }
+                  catch {
+                    case exception: Exception => {
+                      logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                      complete((StatusCodes.BadRequest, exception.toString))
+                    }
+                  }
                 }
                 case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
               }
@@ -58,7 +64,15 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
               requester => {
                 requester.getHeader("Authorization").asScala match {
                   case Some(HttpHeader(_, authorization)) => {
-                    candidateController.getCandidate(candidateId, authorization)
+                    try {
+                      candidateController.getCandidate(candidateId, authorization)
+                    }
+                    catch {
+                      case exception: Exception => {
+                        logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                        complete((StatusCodes.BadRequest, exception.toString))
+                      }
+                    }
                   }
                   case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
                 }
@@ -71,8 +85,16 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
             requester => {
               requester.getHeader("Authorization").asScala match {
                 case Some(HttpHeader(_, authorization)) => entity(as[String]) { candidateJson => {
+                  try {
                     val candidate: CandidateRequester = parse(candidateJson).extract[CandidateRequester]
                     candidateController.createCandidate(candidate, authorization)
+                  }
+                  catch {
+                    case exception: Exception => {
+                      logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                      complete((StatusCodes.BadRequest, exception.toString))
+                    }
+                  }
                   }
                 }
                 case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
@@ -86,8 +108,16 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
               requester => {
                 requester.getHeader("Authorization").asScala match {
                   case Some(HttpHeader(_, authorization)) => entity(as[String]) { candidateJson => {
-                    val candidate: CandidateRequester = parse(candidateJson).extract[CandidateRequester]
-                    candidateController.updateCandidate(candidateId, candidate, authorization)
+                    try {
+                      val candidate: CandidateRequester = parse(candidateJson).extract[CandidateRequester]
+                      candidateController.updateCandidate(candidateId, candidate, authorization)
+                    }
+                    catch {
+                      case exception: Exception => {
+                        logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                        complete((StatusCodes.BadRequest, exception.toString))
+                      }
+                    }
                   }
                   }
                   case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
@@ -102,7 +132,15 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
               requester => {
                 requester.getHeader("Authorization").asScala match {
                   case Some(HttpHeader(_, authorization)) => {
-                    candidateController.deleteCandidate(candidateId, authorization)
+                    try {
+                      candidateController.deleteCandidate(candidateId, authorization)
+                    }
+                    catch {
+                      case exception: Exception => {
+                        logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                        complete((StatusCodes.BadRequest, exception.toString))
+                      }
+                    }
                   }
                   case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
                 }
@@ -115,8 +153,16 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
             requester => {
               requester.getHeader("Authorization").asScala match {
                 case Some(HttpHeader(_, authorization)) => entity(as[String]) { voterJson => {
-                  val voter: CheckVoterStatusRequester = parse(voterJson).extract[CheckVoterStatusRequester]
-                  voterController.checkVoteStatus(voter, authorization)
+                  try {
+                    val voter: CheckVoterStatusRequester = parse(voterJson).extract[CheckVoterStatusRequester]
+                    voterController.checkVoteStatus(voter, authorization)
+                  }
+                  catch {
+                    case exception: Exception => {
+                      logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                      complete((StatusCodes.BadRequest, exception.toString))
+                    }
+                  }
                 }
                 }
                 case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
@@ -129,8 +175,16 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
             requester => {
               requester.getHeader("Authorization").asScala match {
                 case Some(HttpHeader(_, authorization)) => entity(as[String]) { voterJson => {
-                  val voter: VoteRequester = parse(voterJson).extract[VoteRequester]
-                  voterController.vote(voter, authorization)
+                  try {
+                    val voter: VoteRequester = parse(voterJson).extract[VoteRequester]
+                    voterController.vote(voter, authorization)
+                  }
+                  catch {
+                    case exception: Exception => {
+                      logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                      complete((StatusCodes.BadRequest, exception.toString))
+                    }
+                  }
                 }
                 }
                 case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
@@ -143,8 +197,16 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
             requester => {
               requester.getHeader("Authorization").asScala match {
                 case Some(HttpHeader(_, authorization)) => entity(as[String]) { electionJson => {
-                  val election: ToggleElectionRequester = parse(electionJson).extract[ToggleElectionRequester]
-                  electionController.toggleElection(election, authorization)
+                  try {
+                    val election: ToggleElectionRequester = parse(electionJson).extract[ToggleElectionRequester]
+                    electionController.toggleElection(election, authorization)
+                  }
+                  catch {
+                    case exception: Exception => {
+                      logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                      complete((StatusCodes.BadRequest, exception.toString))
+                    }
+                  }
                   }
                 }
                 case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
@@ -157,8 +219,16 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
             requester => {
               requester.getHeader("Authorization").asScala match {
                 case Some(HttpHeader(_, authorization)) => entity(as[String]) { electionJson => {
-                  val checkElectionResultRequester: CheckElectionResultRequester = parse(electionJson).extract[CheckElectionResultRequester]
-                  electionController.checkElectionResult(checkElectionResultRequester, authorization)
+                  try {
+                    val checkElectionResultRequester: CheckElectionResultRequester = parse(electionJson).extract[CheckElectionResultRequester]
+                    electionController.checkElectionResult(checkElectionResultRequester, authorization)
+                  }
+                  catch {
+                    case exception: Exception => {
+                      logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                      complete((StatusCodes.BadRequest, exception.toString))
+                    }
+                  }
                 }
                 }
                 case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
@@ -171,7 +241,15 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
             requester => {
               requester.getHeader("Authorization").asScala match {
                 case Some(HttpHeader(_, authorization)) => {
-                  electionController.getElectionResult(authorization)
+                  try {
+                    electionController.getElectionResult(authorization)
+                  }
+                  catch {
+                    case exception: Exception => {
+                      logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                      complete((StatusCodes.BadRequest, exception.toString))
+                    }
+                  }
                 }
                 case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
               }
@@ -183,7 +261,15 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
             requester => {
               requester.getHeader("Authorization").asScala match {
                 case Some(HttpHeader(_, authorization)) => {
-                  electionController.exportCsv(authorization)
+                  try {
+                    electionController.exportCsv(authorization)
+                  }
+                  catch {
+                    case exception: Exception => {
+                      logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                      complete((StatusCodes.BadRequest, exception.toString))
+                    }
+                  }
                 }
                 case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
               }

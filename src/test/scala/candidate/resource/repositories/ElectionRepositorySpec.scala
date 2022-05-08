@@ -97,7 +97,7 @@ class ElectionRepositorySpec extends  InitializeSpec {
   test("Export election result success") {
     val mockCandidateId: String = "1"
     val mockVotedCount: Int = 10
-    val query: String = s"SELECT id, voted_count from candidates"
+    val query: String = s"SELECT id, voted_count from candidates ORDER BY id"
     when(configurationWrapper.getDBConfig("candidateTable")).thenReturn("candidates")
     when(postgresWrapper.getConnection.prepareStatement(query)).thenReturn(mockP)
     when(postgresWrapper.executeQuery(mockP)).thenReturn((mockRs, ""))
@@ -110,7 +110,7 @@ class ElectionRepositorySpec extends  InitializeSpec {
   }
 
   test("Export election result failed") {
-    val query: String = s"SELECT id, voted_count from candidates"
+    val query: String = s"SELECT id, voted_count from candidates ORDER BY id"
     when(configurationWrapper.getDBConfig("candidateTable")).thenReturn("candidates")
     when(postgresWrapper.getConnection.prepareStatement(query)).thenReturn(mockP)
     when(postgresWrapper.executeQuery(mockP)).thenReturn((mockRs, "failed"))
