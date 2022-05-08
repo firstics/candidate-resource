@@ -2,6 +2,7 @@ package candidate.resource.controllers
 
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.{Directives, Route}
+import akka.stream.scaladsl.FileIO
 import candidate.resource.models.requesters.{CheckElectionResultRequester, ToggleElectionRequester}
 import candidate.resource.services.interfaces.IElectionService
 import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, ILogWrapper, JsonSupport}

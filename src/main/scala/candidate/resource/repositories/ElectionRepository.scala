@@ -57,7 +57,7 @@ class ElectionRepository(implicit val configurationWrapper: IConfigurationWrappe
             eList = eList :+ ElectionResult(returnSet._1.getString("id"), returnSet._1.getString("name"),
               returnSet._1.getString("dob"), returnSet._1.getString("bio_link"),
               returnSet._1.getString("image_link"), returnSet._1.getString("policy"),
-              returnSet._1.getInt("voted_count"), ((returnSet._1.getInt("voted_count").toFloat/totalVoted).toInt * 100).toString + "%")
+              returnSet._1.getInt("voted_count"), ((returnSet._1.getInt("voted_count").toFloat/totalVoted) * 100).toString + "%")
           }
           (eList, returnSet._2)
         }
@@ -87,7 +87,7 @@ class ElectionRepository(implicit val configurationWrapper: IConfigurationWrappe
         while(returnSet._1.next()) {
           cList = cList :+ (returnSet._1.getString("id"), returnSet._1.getString("voted_count"))
         }
-        val f = new File("candidates.csv")
+        val f = new File(s"candidates.csv")
         val writer = CSVWriter.open(f)
         writer.writeRow(List("candidateId", "votedCount"))
         cList.foreach(c =>{

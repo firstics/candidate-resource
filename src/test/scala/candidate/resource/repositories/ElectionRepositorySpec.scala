@@ -57,7 +57,6 @@ class ElectionRepositorySpec extends  InitializeSpec {
     val imageLink: String = "<https://static.wikia.nocookie.net/line/images/b/bb/2015-brown.png/revision/latest/scale-to-width-down/700?cb=20150808131630>"
     val policy: String = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown"
     val votedCount: Int = 10
-    val percentage: String = "100%"
     val candidatesQuery: String = s"SELECT id, name, dob, bio_link, image_link, policy, voted_count FROM candidates"
     when(postgresWrapper.getConnection.prepareStatement(candidatesQuery)).thenReturn(mockP)
     when(postgresWrapper.executeQuery(mockP)).thenReturn((mockRs, ""))
@@ -72,7 +71,6 @@ class ElectionRepositorySpec extends  InitializeSpec {
     val electionRepository: IElectionRepository = new ElectionRepository()
     val result: (List[ElectionResult], String) = electionRepository.getElectionResult
     assert(result._1.size == 1)
-    assert(result._1.head.percentage == percentage)
     assert(result._2 == "")
   }
 

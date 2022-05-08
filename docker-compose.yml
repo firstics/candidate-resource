@@ -1,0 +1,31 @@
+version: "3.7"
+services:
+  server:
+    image: candidate-resource:1.0.0
+    container_name: candidate-resource
+    hostname: candidate-resource
+    networks:
+      - mynet
+    ports:
+      - 20001:20001
+    deploy:
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - /Users/phusithsuktrakul/Documents/work/candidate-resource/src/main/resources:/src/candidate-resource/stage/conf
+
+  db:
+    image: postgres
+    container_name: postgres-db
+    hostname: postgres
+    networks:
+      - mynet
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin1234
+    ports:
+      - 5433:5432
+
+networks:
+  mynet:
+    driver: bridge
