@@ -29,7 +29,7 @@ class ElectionService(implicit val executionContext: ExecutionContextExecutor,
 
   override def getElectionResult: Future[ElectionResultResponder] = Future {
     val result: (List[ElectionResult], String) = electionRepository.getElectionResult
-    ElectionResultResponder(result._1, List(Error(Some(result._2))))
+    ElectionResultResponder(Some(result._1), List(Error(Some(result._2))))
   }
 
   override def exportCsv: Future[File] = Future {

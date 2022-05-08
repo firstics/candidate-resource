@@ -14,8 +14,13 @@ class VoterService(implicit val executionContext: ExecutionContextExecutor,
                    implicit val postgresWrapper: IPostgresWrapper,
                    implicit val logger: ILogWrapper) extends IVoterService {
   override def checkVoteStatus(checkVoterStatusRequester: CheckVoterStatusRequester): Future[CheckVoteStatusResponder] = Future {
-    val result: (Boolean, String) = voterRepository.getVoter(checkVoterStatusRequester.nationalId)
-    CheckVoteStatusResponder(result._1)
+    if(checkVoterStatusRequester.nationalId.isEmpty){
+      CheckVoteStatusResponder(false)
+    }
+    else {
+      val result: (Boolean, String) = voterRepository.getVoter(checkVoterStatusRequester.nationalId)
+      CheckVoteStatusResponder(result._1)
+    }
   }
 
   override def vote(voteRequester: VoteRequester): Future[StatusResponder] = Future {
