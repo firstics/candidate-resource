@@ -1,5 +1,6 @@
 package candidate.resource.repositories
 
+import candidate.resource.models.Voter
 import candidate.resource.repositories.interfaces.IVoterRepository
 import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, ILogWrapper, IPostgresWrapper}
 
@@ -77,6 +78,28 @@ class VoterRepository(implicit val configurationWrapper: IConfigurationWrapper,
       case exception: Exception => {
         logWrapper.error(s"[Voter Repository] Ex: ${exception.toString}")
         ("error", exception.toString)
+      }
+    }
+  }
+
+  override def insertVoter(nationalId: String): (Voter, String) = {
+    try {
+      val query: String = s"INSERT INTO $VOTER_TABLE (id) VALUES(?) RETURNING id, is_voted"
+      val preparedStatement: PreparedStatement = postgresWrapper.getConnection.prepareStatement(query)
+      preparedStatement.setString(1, nationalId)
+      val returnSet: (ResultSet, String) = postgresWrapper.executeQuery(preparedStatement)
+      if(returnSet._2.isEmpty && returnSet._1.next()) {
+        (Voter(returnSet._1.getString("id"),
+          returnSet._1.getBoolean("is_voted")), returnSet._2)
+      }
+      else {
+        (null, returnSet._2)
+      }
+    }
+    catch {
+      case exception: Exception => {
+        logWrapper.error(s"[Voter Repository] Ex: ${exception.toString}")
+        (null, exception.toString)
       }
     }
   }

@@ -1,7 +1,8 @@
 package candidate.resource.services
 
-import candidate.resource.models.requesters.{CheckVoterStatusRequester, VoteRequester}
-import candidate.resource.models.responders.{CheckVoteStatusResponder, StatusResponder}
+import candidate.resource.models.{Error, Voter}
+import candidate.resource.models.requesters.{CheckVoterStatusRequester, CreateVoterRequester, VoteRequester}
+import candidate.resource.models.responders.{CheckVoteStatusResponder, StatusResponder, VoterResponder}
 import candidate.resource.repositories.VoterRepository
 import candidate.resource.repositories.interfaces.IVoterRepository
 import candidate.resource.services.interfaces.IVoterService
@@ -33,6 +34,16 @@ class VoterService(implicit val executionContext: ExecutionContextExecutor,
     else {
       val result: (String, String) = voterRepository.vote(voteRequester.nationalId, voteRequester.candidateId)
       StatusResponder(result._1, Some(result._2))
+    }
+  }
+
+  override def createVoter(createVoterRequester: CreateVoterRequester): Future[VoterResponder] = Future {
+    if(createVoterRequester.nationalId.isEmpty) {
+      VoterResponder(Some(null), List(Error(Some("Invalid nationalId"))))
+    }
+    else {
+      val result: (Voter, String) = voterRepository.insertVoter(createVoterRequester.nationalId)
+      VoterResponder(Some(result._1), List(Error(Some(result._2))))
     }
   }
 

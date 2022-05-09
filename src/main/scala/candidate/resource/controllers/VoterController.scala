@@ -2,7 +2,7 @@ package candidate.resource.controllers
 
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.{Directives, Route}
-import candidate.resource.models.requesters.{CheckVoterStatusRequester, VoteRequester}
+import candidate.resource.models.requesters.{CheckVoterStatusRequester, CreateVoterRequester, VoteRequester}
 import candidate.resource.services.interfaces.IVoterService
 import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, ILogWrapper, JsonSupport}
 
@@ -46,6 +46,30 @@ class VoterController(implicit val executionContext: ExecutionContextExecutor,
         }
         else {
           if (value.status == "error") {
+            StatusCodes.BadRequest
+          } else {
+            StatusCodes.InternalServerError
+          }
+        }
+        complete {
+          HttpResponse(entity = HttpEntity(ContentTypes.`application/json`, write(value)), status = code)
+        }
+      }
+      case Failure(ex) => {
+        ex.printStackTrace()
+        throw ex
+      }
+    }
+  }
+
+  def createVoter(createVoterRequester: CreateVoterRequester, auth: String): Route = {
+    onComplete(voterService.createVoter(createVoterRequester)) {
+      case Success(value) => {
+        val code = if (value.results.get != null) {
+          StatusCodes.OK
+        }
+        else {
+          if (value.errors.nonEmpty) {
             StatusCodes.BadRequest
           } else {
             StatusCodes.InternalServerError

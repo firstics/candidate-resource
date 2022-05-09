@@ -4,7 +4,7 @@ import akka.actor._
 import akka.http.scaladsl.model.{HttpHeader, StatusCodes}
 import akka.http.scaladsl.server.{Directives, Route}
 import candidate.resource.controllers.{CandidateController, ElectionController, HealthCheckController, VoterController}
-import candidate.resource.models.requesters.{CandidateRequester, CheckElectionResultRequester, CheckVoterStatusRequester, ToggleElectionRequester, VoteRequester}
+import candidate.resource.models.requesters.{CandidateRequester, CheckElectionResultRequester, CheckVoterStatusRequester, CreateVoterRequester, ToggleElectionRequester, VoteRequester}
 import candidate.resource.services.{CandidateService, ElectionService, HealthCheckService, VoterService}
 import candidate.resource.services.interfaces.{ICandidateService, IElectionService, IHealthCheckService, IVoterService}
 import candidate.resource.wrappers.interfaces.{IConfigurationWrapper, ILogWrapper, IPostgresWrapper, JsonSupport}
@@ -275,7 +275,29 @@ class ServerRouting(implicit val configurationWrapper: IConfigurationWrapper,
               }
             }
           }
-        })
+        }),
+        post(pathPrefix("people") {
+          extractRequest {
+            requester => {
+              requester.getHeader("Authorization").asScala match {
+                case Some(HttpHeader(_, authorization)) => entity(as[String]) { createVoterJson => {
+                  try {
+                    val voter: CreateVoterRequester = parse(createVoterJson).extract[CreateVoterRequester]
+                    voterController.createVoter(voter, authorization)
+                  }
+                  catch {
+                    case exception: Exception => {
+                      logWrapper.error(s"[Routing] Ex: ${exception.toString}")
+                      complete((StatusCodes.BadRequest, exception.toString))
+                    }
+                  }
+                }
+                }
+                case _ => complete((StatusCodes.Unauthorized, "Authorization Header is missing."))
+              }
+            }
+          }
+        }),
       )
     }
   }

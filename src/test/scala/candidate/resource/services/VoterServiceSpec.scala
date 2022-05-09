@@ -1,7 +1,8 @@
 package candidate.resource.services
 
 import candidate.resource.InitializeSpec
-import candidate.resource.models.requesters.{CheckVoterStatusRequester, VoteRequester}
+import candidate.resource.models.Voter
+import candidate.resource.models.requesters.{CheckVoterStatusRequester, CreateVoterRequester, VoteRequester}
 import candidate.resource.repositories.VoterRepository
 import candidate.resource.repositories.interfaces.IVoterRepository
 import candidate.resource.services.interfaces.IVoterService
@@ -105,6 +106,46 @@ class VoterServiceSpec extends InitializeSpec {
     val futureResult = Await.result(service.vote(mockReq), 5000 millis)
     assert(futureResult.status == "error")
     assert(futureResult.message.get == "Already voted")
+  }
+
+  test("Create voter success") {
+    val mockId: String = "1111111111114"
+    val mockReq: CreateVoterRequester = CreateVoterRequester(mockId)
+    val voter: Voter = Voter(mockId, false)
+    val mockRepo: IVoterRepository = Mockito.mock(classOf[VoterRepository], RETURNS_MOCKS)
+    val service: IVoterService = new VoterService() {
+      override def voterRepository: IVoterRepository = mockRepo
+    }
+    when(mockRepo.insertVoter(mockId)).thenReturn((voter, ""))
+    val futureResult = Await.result(service.createVoter(mockReq), 5000 millis)
+    assert(futureResult.results.get != null)
+    assert(futureResult.errors.head.message.get.isEmpty)
+  }
+
+  test("Create voter got empty nationalId") {
+    val mockId: String = ""
+    val mockReq: CreateVoterRequester = CreateVoterRequester(mockId)
+    val mockRepo: IVoterRepository = Mockito.mock(classOf[VoterRepository], RETURNS_MOCKS)
+    val service: IVoterService = new VoterService() {
+      override def voterRepository: IVoterRepository = mockRepo
+    }
+    val futureResult = Await.result(service.createVoter(mockReq), 5000 millis)
+    assert(futureResult.results.get == null)
+    assert(futureResult.errors.head.message.get == "Invalid nationalId")
+  }
+
+  test("Create voter failed") {
+    val mockId: String = "1111111111114"
+    val mockReq: CreateVoterRequester = CreateVoterRequester(mockId)
+    val voter: Voter = Voter(mockId, false)
+    val mockRepo: IVoterRepository = Mockito.mock(classOf[VoterRepository], RETURNS_MOCKS)
+    val service: IVoterService = new VoterService() {
+      override def voterRepository: IVoterRepository = mockRepo
+    }
+    when(mockRepo.insertVoter(mockId)).thenReturn((null, "failed"))
+    val futureResult = Await.result(service.createVoter(mockReq), 5000 millis)
+    assert(futureResult.results.get == null)
+    assert(futureResult.errors.head.message.get == "failed")
   }
 
 }

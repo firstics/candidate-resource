@@ -1,6 +1,7 @@
 package candidate.resource.repositories
 
 import candidate.resource.InitializeSpec
+import candidate.resource.models.Voter
 import candidate.resource.repositories.interfaces.IVoterRepository
 import org.mockito.Mockito
 import org.mockito.Mockito.RETURNS_MOCKS
@@ -101,6 +102,32 @@ class VoterRepositorySpec extends InitializeSpec {
     assert(result._2 == "failed")
   }
 
+  test("Insert voter success") {
+    val mockId: String = "1111111111114"
+    val query: String = s"INSERT INTO voters (id) VALUES(?) RETURNING id, is_voted"
+    when(configurationWrapper.getDBConfig("voterTable")).thenReturn("voters")
+    when(postgresWrapper.getConnection.prepareStatement(query)).thenReturn(mockP)
+    when(postgresWrapper.executeQuery(mockP)).thenReturn((mockRs, ""))
+    when(mockRs.next()).thenReturn(true)
+    when(mockRs.getString("id")).thenReturn("1111111111114")
+    when(mockRs.getBoolean("is_voted")).thenReturn(false)
+    val voterRepository: IVoterRepository = new VoterRepository()
+    val result: (Voter, String) = voterRepository.insertVoter(mockId)
+    assert(result._1 != null)
+    assert(result._2.isEmpty)
+  }
 
+  test("Insert voter failed") {
+    val mockId: String = "1111111111114"
+    val query: String = s"INSERT INTO voters (id) VALUES(?) RETURNING id, is_voted"
+    when(configurationWrapper.getDBConfig("voterTable")).thenReturn("voters")
+    when(postgresWrapper.getConnection.prepareStatement(query)).thenReturn(mockP)
+    when(postgresWrapper.executeQuery(mockP)).thenReturn((mockRs, "failed"))
+    when(mockRs.next()).thenReturn(false)
+    val voterRepository: IVoterRepository = new VoterRepository()
+    val result: (Voter, String) = voterRepository.insertVoter(mockId)
+    assert(result._1 == null)
+    assert(result._2 == "failed")
+  }
 
 }
