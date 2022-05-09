@@ -1,8 +1,6 @@
 # Candidate Resource
 ## Solution Back-End Engineer Assignment
 
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
-
 ## Installation
 
 This service is very easy to install and deploy in a Docker container.
@@ -47,3 +45,34 @@ CREATE TABLE voters (
 ```
 
 Then you're good to go with candidate-resource service!
+
+## ::FYI::
+## Export csv endpoint
+CSV file willl be located at `/src/candidate-resource/stage` in container of candidate resource service.
+
+# Apart from the main requrirements
+## POST Create Voter
+API to create voter who is able vote the candidate
+Example curl
+
+```sh
+curl -X POST {endpoint}/api/people \
+--header 'Authorization: Bearer xxxx' \
+-d '{
+    "nationalId": "1111111111114‬"
+}'
+```
+
+Expected Response:
+```sh
+# Success
+{
+    "nationalId": "1111111111114‬",
+    "isVoted": false
+}
+```
+## Response Detail
+| Parameter | Description |
+| ------ | ------ |
+| nationalId | national id of voter |
+| isVoted | status of voter (already voted or not as true/false) |
